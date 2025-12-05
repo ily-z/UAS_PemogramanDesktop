@@ -1,10 +1,13 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
-from controllers.makanan_controller import load_makanan
+from controllers.makanan_controller import MakananController, load_makanan
 from views.components.card_widget import CardWidget
 from views.components.form_makanan import FormMakanan
+from controllers.makanan_controller import MakananController
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        self.makanan_ctrl = None
         MainWindow.setWindowTitle("Menu Makanan")
         MainWindow.resize(950, 750)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -35,6 +38,37 @@ class Ui_MainWindow(object):
         hLayout.addWidget(labelTitle)
         hLayout.addWidget(labelTagline)
         mainLayout.addWidget(header)
+
+        # ====== MENU NAVIGASI SAMPING ======
+        self.menuFrame = QtWidgets.QFrame()
+        self.menuFrame.setFixedHeight(60)
+        self.menuFrame.setStyleSheet("""
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #ccc;
+        """)
+
+        menuLayout = QtWidgets.QHBoxLayout(self.menuFrame)
+        menuLayout.setContentsMargins(10, 5, 10, 5)
+        menuLayout.setSpacing(15)
+
+        self.btnDashboard = QtWidgets.QPushButton(self.menuFrame)
+        self.btnTransaksi = QtWidgets.QPushButton(self.menuFrame)
+        self.btnLaporan = QtWidgets.QPushButton(self.menuFrame)
+        self.btnKelolaMakanan = QtWidgets.QPushButton(self.menuFrame)
+        self.btnKelolaMakanan.setObjectName("btnKelolaMakanan")
+        self.btnKelolaMakanan.setText("Kelola Makanan")
+        self.btnKelolaMakanan.setMinimumHeight(35)
+        #self.btnKelolaMakanan.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
+        # self.btnDashboard = QtWidgets.QPushButton("Dashboard")
+        # self.btnTransaksi = QtWidgets.QPushButton("Transaksi")
+        # self.btnLaporan = QtWidgets.QPushButton("Laporan")
+        # self.btnKelolaMakanan = QtWidgets.QPushButton("Kelola Makanan")
+
+        mainLayout.addWidget(self.menuFrame)
+        self.btnKelolaMakanan.clicked.connect(self.open_makanan_crud)
+        menuLayout.addWidget(self.btnDashboard)
+
 
         # ===== FILTER SECTION =====
         filterFrame = QtWidgets.QFrame()
@@ -133,6 +167,14 @@ class Ui_MainWindow(object):
             self.data = load_makanan()
             self.applyFilter()
 
+
+    def open_makanan_crud(self):
+    # jika mau single instance, simpan di self
+        if not hasattr(self, "makanan_ctrl") or self.makanan_ctrl is None:
+            self.makanan_ctrl = MakananController(parent=self)
+        else:
+            self.makanan_ctrl.view.show()
+    
     # ===== DELETE RECORD =====
     def deleteRecord(self, data):
         confirm = QtWidgets.QMessageBox.question(
