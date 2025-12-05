@@ -29,11 +29,12 @@ class CardWidget(QtWidgets.QWidget):
 
         bottom = QtWidgets.QHBoxLayout()
         qty = QtWidgets.QSpinBox()
+        qty.setStyleSheet("color: white;")
         qty.setFixedWidth(50)
 
         add_cart = QtWidgets.QPushButton("🛒")
         beli = QtWidgets.QPushButton("⚡ Beli")
-        add_cart.setStyleSheet("background:#c7a06a; color:black; font-weight:bold;")
+        add_cart.setStyleSheet("background:#c7a06a; color:black; font-weight:bold; padding:4px;")
         beli.setStyleSheet("background:#e6d1a3; color:black; font-weight:bold; padding:4px;")
 
         bottom.addWidget(qty)
