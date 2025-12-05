@@ -1,12 +1,20 @@
 from models.database import get_connection
 from models.makanan_model import MakananModel, get_all_makanan
+from PyQt6.QtWidgets import (
+    QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox
+)
+# Asumsi: Anda memiliki MakananView di views/MakananView.py
+from views.MakananView import MakananView
+
 
 ##### HELPER FUNCTIONS – dipakai langsung di UI #####
 
 def load_makanan():
+    """Memuat semua data makanan dari model/database."""
     return get_all_makanan()
 
 def delete_makanan(id_makanan):
+    """Menghapus data makanan berdasarkan ID."""
     conn = get_connection()
     c = conn.cursor()
     c.execute("DELETE FROM makanan WHERE id_makanan = ?", (id_makanan,))
@@ -14,6 +22,7 @@ def delete_makanan(id_makanan):
     conn.close()
 
 def insert_makanan(nama_makanan, harga_default, kategori, nama_gambar):
+    """Menyimpan data makanan baru ke database."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -24,6 +33,7 @@ def insert_makanan(nama_makanan, harga_default, kategori, nama_gambar):
     conn.close()
 
 def update_makanan(id_makanan, nama_makanan, harga_default, kategori, nama_gambar):
+    """Memperbarui data makanan di database."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -35,12 +45,7 @@ def update_makanan(id_makanan, nama_makanan, harga_default, kategori, nama_gamba
     conn.close()
 
 
-
-from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox
-)
-from views.MakananView import MakananView
-
+##### MakananForm (DIPERLUKAN UNTUK CONTROLLER/VIEW) #####
 
 class MakananForm(QDialog):
     def __init__(self, parent=None, data=None):
@@ -90,6 +95,7 @@ class MakananForm(QDialog):
         )
 
 
+##### MakananController (TIDAK ADA PERUBAHAN) #####
 
 class MakananController:
     def __init__(self, parent=None):
@@ -136,6 +142,7 @@ class MakananController:
             self.reload()
 
     def on_delete(self, row):
+        # Asumsi: method confirm_delete di View sudah sesuai
         if self.view.confirm_delete(self.view):
             self.model.delete(row[0])
             self.reload()

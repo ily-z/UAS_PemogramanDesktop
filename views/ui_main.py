@@ -2,7 +2,8 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 from controllers.makanan_controller import MakananController, load_makanan
 from views.components.card_widget import CardWidget
 from views.components.form_makanan import FormMakanan
-from controllers.makanan_controller import MakananController
+# Import MakananController lagi (sudah ada di atas, tapi biarkan sesuai format Anda)
+from controllers.makanan_controller import MakananController 
 
 
 class Ui_MainWindow(object):
@@ -51,23 +52,22 @@ class Ui_MainWindow(object):
         menuLayout.setContentsMargins(10, 5, 10, 5)
         menuLayout.setSpacing(15)
 
-        self.btnDashboard = QtWidgets.QPushButton(self.menuFrame)
-        self.btnTransaksi = QtWidgets.QPushButton(self.menuFrame)
-        self.btnLaporan = QtWidgets.QPushButton(self.menuFrame)
-        self.btnKelolaMakanan = QtWidgets.QPushButton(self.menuFrame)
+        # Tambahkan teks untuk tombol-tombol yang awalnya kosong
+        self.btnDashboard = QtWidgets.QPushButton("Dashboard")
+        self.btnTransaksi = QtWidgets.QPushButton("Transaksi")
+        self.btnLaporan = QtWidgets.QPushButton("Laporan")
+        self.btnKelolaMakanan = QtWidgets.QPushButton("Kelola Makanan")
         self.btnKelolaMakanan.setObjectName("btnKelolaMakanan")
-        self.btnKelolaMakanan.setText("Kelola Makanan")
         self.btnKelolaMakanan.setMinimumHeight(35)
-        #self.btnKelolaMakanan.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
-        # self.btnDashboard = QtWidgets.QPushButton("Dashboard")
-        # self.btnTransaksi = QtWidgets.QPushButton("Transaksi")
-        # self.btnLaporan = QtWidgets.QPushButton("Laporan")
-        # self.btnKelolaMakanan = QtWidgets.QPushButton("Kelola Makanan")
+        menuLayout.addWidget(self.btnDashboard)
+        menuLayout.addWidget(self.btnTransaksi)
+        menuLayout.addWidget(self.btnLaporan)
+        menuLayout.addWidget(self.btnKelolaMakanan)
+        menuLayout.addStretch() # Agar tombol merapat ke kiri
 
         mainLayout.addWidget(self.menuFrame)
         self.btnKelolaMakanan.clicked.connect(self.open_makanan_crud)
-        menuLayout.addWidget(self.btnDashboard)
 
 
         # ===== FILTER SECTION =====
@@ -76,18 +76,18 @@ class Ui_MainWindow(object):
 
         self.comboKategori = QtWidgets.QComboBox()
         self.comboKategori.addItem("Semua Kategori")
+        self.comboKategori.setMinimumWidth(150)
 
-        self.sliderHarga = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        self.sliderHarga.setRange(0, 50000)
-        self.sliderHarga.setValue(50000)
-        self.sliderHargaLabel = QtWidgets.QLabel("Max Harga: 50000")
+        # --- GANTI QSlider menjadi QComboBox untuk Harga Maks ---
+        self.comboHarga = QtWidgets.QComboBox()
+        self.setupPriceFilter() # Panggil metode baru untuk mengisi dropdown harga
 
         filterLayout.addWidget(QtWidgets.QLabel("Kategori:"))
         filterLayout.addWidget(self.comboKategori)
         filterLayout.addSpacing(30)
         filterLayout.addWidget(QtWidgets.QLabel("Harga Maks:"))
-        filterLayout.addWidget(self.sliderHarga)
-        filterLayout.addWidget(self.sliderHargaLabel)
+        filterLayout.addWidget(self.comboHarga)
+        filterLayout.addStretch() 
 
         mainLayout.addWidget(filterFrame)
 
@@ -114,11 +114,30 @@ class Ui_MainWindow(object):
 
         # Event Filter
         self.comboKategori.currentTextChanged.connect(self.applyFilter)
-        self.sliderHarga.valueChanged.connect(self.applyFilter)
+        # --- Koneksi event baru untuk QComboBox Harga ---
+        self.comboHarga.currentTextChanged.connect(self.applyFilter)
 
         self.scrollArea.setWidget(self.container)
         mainLayout.addWidget(self.scrollArea)
         MainWindow.setCentralWidget(self.centralwidget)
+
+    ## --- METODE BARU: Setup Filter Harga ---
+    def setupPriceFilter(self):
+        """Mengisi QComboBox Harga Maks dengan rentang 5000 hingga 50000 (kelipatan 5000)."""
+        # Rentang harga: 5000, 10000, ..., 50000
+        self.price_options = list(range(5000, 50001, 5000))
+        
+        # Inisialisasi mapping untuk menyimpan nilai numerik dari teks dropdown
+        self.price_mapping = {
+            "Semua Harga": 999999999, # Nilai besar untuk "tidak ada batas"
+        }
+        self.comboHarga.addItem("Semua Harga")
+        
+        for price in self.price_options:
+            # Format teks: "≤ Rp 10.000"
+            price_text = f"≤ Rp {price:,}".replace(",", ".")
+            self.comboHarga.addItem(price_text)
+            self.price_mapping[price_text] = price
 
     # ===== UPDATE CARDS =====
     def fillCards(self):
@@ -136,21 +155,27 @@ class Ui_MainWindow(object):
                 c = 0
                 r += 1
 
-    # ===== FILTER ACTION =====
+    # ===== FILTER ACTION (Diubah) =====
     def applyFilter(self):
         selectedKategori = self.comboKategori.currentText()
-        maxHarga = self.sliderHarga.value()
-        self.sliderHargaLabel.setText(f"Max Harga: {maxHarga}")
+        selectedHargaText = self.comboHarga.currentText() # Ambil teks dari combo box harga
+        
+        # Dapatkan nilai harga maks dari mapping. Gunakan nilai default jika teks tidak ditemukan.
+        maxHarga = self.price_mapping.get(selectedHargaText, 999999999) 
+        
+        # Hapus label harga yang sudah tidak dipakai
+        # self.sliderHargaLabel.setText(f"Max Harga: {maxHarga}") 
 
         self.filtered_data = []
         for m in self.data:
             kategori_value = m["kategori"] if "kategori" in m.keys() else m["jenis_makanan"]
 
             if (selectedKategori == "Semua Kategori" or kategori_value == selectedKategori) and \
-               int(m["harga_default"]) <= maxHarga:
+                int(m["harga_default"]) <= maxHarga: # Filter: harga <= maxHarga
                 self.filtered_data.append(m)
 
         self.fillCards()
+        
     # ===== EDIT RECORD =====
     def editRecord(self, data):
         self.form = FormMakanan()
