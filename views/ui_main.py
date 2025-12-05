@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 from controllers.makanan_controller import load_makanan
 from views.components.card_widget import CardWidget
+from views.components.form_makanan import FormMakanan
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -94,7 +95,7 @@ class Ui_MainWindow(object):
 
         r = c = 0
         for m in self.filtered_data:
-            card = CardWidget(m["nama_makanan"], m["harga_default"], m["nama_gambar"])
+            card = CardWidget(m, self.editRecord, self.deleteRecord)
             self.grid.addWidget(card, r, c)
             c += 1
             if c == 3:
@@ -116,3 +117,34 @@ class Ui_MainWindow(object):
                 self.filtered_data.append(m)
 
         self.fillCards()
+    # ===== EDIT RECORD =====
+    def editRecord(self, data):
+        self.form = FormMakanan()
+        self.form.setModeEdit(
+            data["id_makanan"],
+            data["nama_makanan"],
+            str(data["harga_default"]),
+            data["kategori"],
+            data["nama_gambar"]
+        )
+
+        if self.form.exec():
+            # Refresh data setelah update
+            self.data = load_makanan()
+            self.applyFilter()
+
+    # ===== DELETE RECORD =====
+    def deleteRecord(self, data):
+        confirm = QtWidgets.QMessageBox.question(
+            None,
+            "Hapus Data",
+            f"Yakin hapus '{data['nama_makanan']}'?",
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+        )
+        if confirm == QtWidgets.QMessageBox.StandardButton.Yes:
+            from controllers.makanan_controller import delete_makanan
+            delete_makanan(data['id_makanan'])
+            
+            # Refresh data di UI
+            self.data = load_makanan()
+            self.applyFilter()

@@ -1,14 +1,18 @@
 from PyQt6 import QtWidgets, QtGui, QtCore
 
 class CardWidget(QtWidgets.QWidget):
-    def __init__(self, nama, harga, gambar):
+    def __init__(self, data, editCallback, deleteCallback):
         super().__init__()
-        self.setFixedSize(240, 330)
+        self.data = data
+        self.editCallback = editCallback
+        self.deleteCallback = deleteCallback
+
+        self.setFixedSize(240, 360)
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(6)
 
-        img_path = f"images/{gambar}"
-
+        # Gambar
+        img_path = f"images/{data['nama_gambar']}"
         img_label = QtWidgets.QLabel()
         pixmap = QtGui.QPixmap(img_path).scaled(
             240, 150,
@@ -19,11 +23,13 @@ class CardWidget(QtWidgets.QWidget):
         img_label.setFixedHeight(150)
         layout.addWidget(img_label)
 
-        name_lbl = QtWidgets.QLabel(nama)
+        # Nama makanan
+        name_lbl = QtWidgets.QLabel(data["nama_makanan"])
         name_lbl.setStyleSheet("font-weight: bold; font-size: 16px; color: white;")
         layout.addWidget(name_lbl)
 
-        price_lbl = QtWidgets.QLabel(f"Rp {harga:,.0f}")
+        # Harga
+        price_lbl = QtWidgets.QLabel(f"Rp {data['harga_default']:,}")
         price_lbl.setStyleSheet("font-size: 15px; background:#222; color: gold; padding:6px; border-radius:6px;")
         layout.addWidget(price_lbl)
 
@@ -41,6 +47,21 @@ class CardWidget(QtWidgets.QWidget):
         bottom.addWidget(add_cart)
         bottom.addWidget(beli)
         layout.addLayout(bottom)
+
+        # ===== TOMBOL EDIT & HAPUS =====
+        actions = QtWidgets.QHBoxLayout()
+        
+        btnEdit = QtWidgets.QPushButton("Edit")
+        btnEdit.setStyleSheet("background:#3498db; color:white; font-size:12px; padding:4px;")
+        btnEdit.clicked.connect(lambda: self.editCallback(self.data))
+
+        btnDelete = QtWidgets.QPushButton("Hapus")
+        btnDelete.setStyleSheet("background:#e74c3c; color:white; font-size:12px; padding:4px;")
+        btnDelete.clicked.connect(lambda: self.deleteCallback(self.data))
+
+        actions.addWidget(btnEdit)
+        actions.addWidget(btnDelete)
+        layout.addLayout(actions)
 
         layout.addStretch()
         layout.setContentsMargins(5, 5, 5, 5)
