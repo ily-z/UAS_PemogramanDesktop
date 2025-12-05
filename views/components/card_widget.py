@@ -51,16 +51,7 @@ class CardWidget(QtWidgets.QWidget):
         # ===== TOMBOL EDIT & HAPUS =====
         actions = QtWidgets.QHBoxLayout()
         
-        btnEdit = QtWidgets.QPushButton("Edit")
-        btnEdit.setStyleSheet("background:#3498db; color:white; font-size:12px; padding:4px;")
-        btnEdit.clicked.connect(lambda: self.editCallback(self.data))
 
-        btnDelete = QtWidgets.QPushButton("Hapus")
-        btnDelete.setStyleSheet("background:#e74c3c; color:white; font-size:12px; padding:4px;")
-        btnDelete.clicked.connect(lambda: self.deleteCallback(self.data))
-
-        actions.addWidget(btnEdit)
-        actions.addWidget(btnDelete)
         layout.addLayout(actions)
 
         layout.addStretch()
