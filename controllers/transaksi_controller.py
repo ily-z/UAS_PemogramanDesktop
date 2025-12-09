@@ -60,7 +60,7 @@ def insert_transaksi(detail_items, total, id_pembeli=None, id_kasir=None, id_vou
             cursor.execute(query_detail, params_detail)
 
         conn.commit()
-        print(f"✓ Transaksi #{id_transaksi} berhasil disimpan dengan {len(detail_items)} item")
+        print(f"[OK] Transaksi #{id_transaksi} berhasil disimpan dengan {len(detail_items)} item")
 
     except Exception as e:
         conn.rollback()
