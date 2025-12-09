@@ -88,13 +88,15 @@ def load_detail_transaksi(id_transaksi):
         conn.close()
 
 
-class LaporanView(QtWidgets.QDialog):
+class LaporanView(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Laporan Transaksi")
         self.resize(900, 600)
+        self.detail_dialogs = []  # Simpan reference dialog agar tidak garbage collected
         
-        mainLayout = QtWidgets.QVBoxLayout(self)
+        mainWidget = QtWidgets.QWidget()
+        mainLayout = QtWidgets.QVBoxLayout(mainWidget)
         
         # ===== HEADER =====
         headerLabel = QtWidgets.QLabel("Riwayat Transaksi")
@@ -120,7 +122,7 @@ class LaporanView(QtWidgets.QDialog):
         # ===== LOAD DATA =====
         self.loadDataTransaksi()
         
-        self.setLayout(mainLayout)
+        self.setCentralWidget(mainWidget)
     
     def loadDataTransaksi(self):
         """Load dan tampilkan data transaksi di tabel"""
@@ -149,51 +151,66 @@ class LaporanView(QtWidgets.QDialog):
     
     def lihatDetail(self, id_transaksi):
         """Tampilkan detail transaksi dalam dialog"""
-        detail_items = load_detail_transaksi(id_transaksi)
-        
-        dialog = QtWidgets.QDialog(self)
-        dialog.setWindowTitle(f"Detail Transaksi #{id_transaksi}")
-        dialog.resize(600, 400)
-        
-        layout = QtWidgets.QVBoxLayout(dialog)
-        
-        # Header
-        headerLabel = QtWidgets.QLabel(f"Transaksi #{id_transaksi}")
-        headerLabel.setStyleSheet("font-size: 14px; font-weight: bold;")
-        layout.addWidget(headerLabel)
-        
-        # Tabel detail
-        tabelDetail = QtWidgets.QTableWidget()
-        tabelDetail.setColumnCount(5)
-        tabelDetail.setHorizontalHeaderLabels([
-            "Nama Makanan", "Kuantitas", "Harga Satuan", "Subtotal", ""
-        ])
-        tabelDetail.setColumnWidth(0, 180)
-        tabelDetail.setColumnWidth(1, 80)
-        tabelDetail.setColumnWidth(2, 100)
-        tabelDetail.setColumnWidth(3, 120)
-        
-        for detail in detail_items:
-            row = tabelDetail.rowCount()
-            tabelDetail.insertRow(row)
+        try:
+            detail_items = load_detail_transaksi(id_transaksi)
             
-            tabelDetail.setItem(row, 0, QtWidgets.QTableWidgetItem(detail.get("nama_makanan", "N/A")))
-            tabelDetail.setItem(row, 1, QtWidgets.QTableWidgetItem(str(detail["kuantitas"])))
-            tabelDetail.setItem(row, 2, QtWidgets.QTableWidgetItem(f"Rp {detail['harga_satuan']:,}"))
-            tabelDetail.setItem(row, 3, QtWidgets.QTableWidgetItem(f"Rp {detail['subtotal']:,}"))
-        
-        layout.addWidget(tabelDetail)
-        
-        # Total
-        if detail_items:
-            total = sum([item["subtotal"] for item in detail_items])
-            totalLabel = QtWidgets.QLabel(f"Total: Rp {total:,}")
-            totalLabel.setStyleSheet("font-size: 12px; font-weight: bold; text-align: right;")
+            dialog = QtWidgets.QDialog(self)
+            dialog.setWindowTitle(f"Detail Transaksi #{id_transaksi}")
+            dialog.resize(600, 400)
+            dialog.setModal(True)
+            
+            layout = QtWidgets.QVBoxLayout(dialog)
+            
+            # Header
+            headerLabel = QtWidgets.QLabel(f"Transaksi #{id_transaksi}")
+            headerLabel.setStyleSheet("font-size: 14px; font-weight: bold;")
+            layout.addWidget(headerLabel)
+            
+            # Tabel detail
+            tabelDetail = QtWidgets.QTableWidget()
+            tabelDetail.setColumnCount(4)
+            tabelDetail.setHorizontalHeaderLabels([
+                "Nama Makanan", "Kuantitas", "Harga Satuan", "Subtotal"
+            ])
+            tabelDetail.setColumnWidth(0, 180)
+            tabelDetail.setColumnWidth(1, 80)
+            tabelDetail.setColumnWidth(2, 120)
+            tabelDetail.setColumnWidth(3, 120)
+            
+            total_all = 0
+            if detail_items:
+                for detail in detail_items:
+                    row = tabelDetail.rowCount()
+                    tabelDetail.insertRow(row)
+                    
+                    nama = str(detail.get("nama_makanan", "N/A"))
+                    qty = str(detail.get("kuantitas", 0))
+                    harga = int(detail.get("harga_satuan", 0))
+                    subtotal = int(detail.get("subtotal", 0))
+                    
+                    tabelDetail.setItem(row, 0, QtWidgets.QTableWidgetItem(nama))
+                    tabelDetail.setItem(row, 1, QtWidgets.QTableWidgetItem(qty))
+                    tabelDetail.setItem(row, 2, QtWidgets.QTableWidgetItem(f"Rp {harga:,}"))
+                    tabelDetail.setItem(row, 3, QtWidgets.QTableWidgetItem(f"Rp {subtotal:,}"))
+                    total_all += subtotal
+            
+            layout.addWidget(tabelDetail)
+            
+            # Total
+            totalLabel = QtWidgets.QLabel(f"Total: Rp {total_all:,}")
+            totalLabel.setStyleSheet("font-size: 13px; font-weight: bold;")
             layout.addWidget(totalLabel)
-        
-        # Tombol Tutup
-        btnTutup = QtWidgets.QPushButton("Tutup")
-        btnTutup.clicked.connect(dialog.close)
-        layout.addWidget(btnTutup)
-        
-        dialog.exec()
+            
+            # Tombol Tutup
+            btnTutup = QtWidgets.QPushButton("Tutup")
+            btnTutup.clicked.connect(dialog.close)
+            layout.addWidget(btnTutup)
+            
+            # Simpan reference
+            self.detail_dialogs.append(dialog)
+            
+            dialog.exec()
+            
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Gagal membuka detail: {str(e)}")
+            print(f"Error detail: {e}")

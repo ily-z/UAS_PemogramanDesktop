@@ -227,5 +227,5 @@ class Ui_MainWindow(object):
             self.applyFilter()
     
     def openLaporanPage(self):
-        laporan = LaporanView(self)
-        laporan.exec()
+        laporan = LaporanView()
+        laporan.show()
