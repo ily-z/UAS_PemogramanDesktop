@@ -3,7 +3,8 @@ from controllers.makanan_controller import MakananController, load_makanan
 from views.components.card_widget import CardWidget
 from views.components.form_makanan import FormMakanan
 # Import MakananController lagi (sudah ada di atas, tapi biarkan sesuai format Anda)
-from controllers.makanan_controller import MakananController 
+from controllers.makanan_controller import MakananController
+from views.transaksi_view import TransaksiView
 
 
 class Ui_MainWindow(object):
@@ -68,6 +69,7 @@ class Ui_MainWindow(object):
 
         mainLayout.addWidget(self.menuFrame)
         self.btnKelolaMakanan.clicked.connect(self.open_makanan_crud)
+        self.btnTransaksi.clicked.connect(self.openTransaksiPage)
 
 
         # ===== FILTER SECTION =====
@@ -213,5 +215,11 @@ class Ui_MainWindow(object):
             delete_makanan(data['id_makanan'])
             
             # Refresh data di UI
+            self.data = load_makanan()
+            self.applyFilter()
+    
+    def openTransaksiPage(self):
+        transaksi = TransaksiView()
+        if transaksi.exec():
             self.data = load_makanan()
             self.applyFilter()
