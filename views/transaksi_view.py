@@ -56,6 +56,32 @@ def load_kasir():
         cursor.close()
         conn.close()
 
+def load_diskon_voucher():
+    """Load diskon voucher dari database"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id_voucher, nama_voucher, nilai FROM diskon_voucher ORDER BY nilai DESC")
+        
+        rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            if isinstance(r, sqlite3.Row):
+                result.append(dict(r))
+            else:
+                result.append({
+                    "id_voucher": r[0],
+                    "nama_voucher": r[1],
+                    "nilai": r[2]
+                })
+        return result
+    except Exception as e:
+        print(f"Error load diskon voucher: {e}")
+        return []
+    finally:
+        cursor.close()
+        conn.close()
+
 class TransaksiView(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
@@ -118,11 +144,16 @@ class TransaksiView(QtWidgets.QDialog):
         self.txtQty.setRange(1, 100)
         self.txtQty.setValue(1)
 
-        # Diskon per item (persen)
-        self.spinDiskonItem = QtWidgets.QSpinBox()
-        self.spinDiskonItem.setRange(0, 100)
-        self.spinDiskonItem.setValue(0)
-        self.spinDiskonItem.setSuffix(" %")
+        # Diskon per item (dropdown dari database)
+        self.comboDiskonItem = QtWidgets.QComboBox()
+        self.data_diskon = load_diskon_voucher()
+        self.diskon_mapping = {"Tanpa Diskon": 0}
+        self.comboDiskonItem.addItem("Tanpa Diskon", 0)
+        
+        for diskon in self.data_diskon:
+            display_text = f"{diskon['nama_voucher']} ({diskon['nilai']}%)"
+            self.diskon_mapping[display_text] = diskon['nilai']
+            self.comboDiskonItem.addItem(display_text, diskon['nilai'])
 
         # Subtotal otomatis (setelah diskon)
         self.txtSubtotal = QtWidgets.QLineEdit()
@@ -135,7 +166,7 @@ class TransaksiView(QtWidgets.QDialog):
         inputLayout.addRow("Nama Makanan:", self.comboMakanan)
         inputLayout.addRow("Harga:", self.txtHarga)
         inputLayout.addRow("Qty:", self.txtQty)
-        inputLayout.addRow("Diskon (item):", self.spinDiskonItem)
+        inputLayout.addRow("Diskon (item):", self.comboDiskonItem)
         inputLayout.addRow("Subtotal (setelah diskon):", self.txtSubtotal)
         inputLayout.addRow("", self.btnTambahItem)
 
@@ -190,7 +221,7 @@ class TransaksiView(QtWidgets.QDialog):
         # ===== EVENT =====
         self.comboMakanan.currentIndexChanged.connect(self.updateHargaSubtotal)
         self.txtQty.valueChanged.connect(self.updateHargaSubtotal)
-        self.spinDiskonItem.valueChanged.connect(self.updateHargaSubtotal)
+        self.comboDiskonItem.currentIndexChanged.connect(self.updateHargaSubtotal)
         self.btnTambahItem.clicked.connect(self.tambahItem)
         self.btnSimpan.clicked.connect(self.simpanTransaksi)
         self.btnBatal.clicked.connect(self.reject)
@@ -205,7 +236,7 @@ class TransaksiView(QtWidgets.QDialog):
         idx = self.comboMakanan.currentIndex()
         harga = int(self.data_makanan[idx].get("harga_default", 0))
         qty = int(self.txtQty.value())
-        diskon_pct = int(self.spinDiskonItem.value())
+        diskon_pct = int(self.comboDiskonItem.currentData())
         subtotal_raw = harga * qty
         diskon_amt = (subtotal_raw * diskon_pct) // 100
         subtotal = subtotal_raw - diskon_amt
@@ -224,7 +255,7 @@ class TransaksiView(QtWidgets.QDialog):
         nama_makanan = self.comboMakanan.currentText()
         harga = int(self.data_makanan[idx].get("harga_default", 0))
         qty = int(self.txtQty.value())
-        diskon_pct = int(self.spinDiskonItem.value())
+        diskon_pct = int(self.comboDiskonItem.currentData())
         subtotal_raw = harga * qty
         diskon_amt = (subtotal_raw * diskon_pct) // 100
         subtotal = subtotal_raw - diskon_amt
@@ -258,7 +289,7 @@ class TransaksiView(QtWidgets.QDialog):
 
         # Reset form input
         self.txtQty.setValue(1)
-        self.spinDiskonItem.setValue(0)
+        self.comboDiskonItem.setCurrentIndex(0)
         self.updateHargaSubtotal()
         self.updateTotal()
 

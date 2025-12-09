@@ -5,6 +5,7 @@ from views.components.form_makanan import FormMakanan
 # Import MakananController lagi (sudah ada di atas, tapi biarkan sesuai format Anda)
 from controllers.makanan_controller import MakananController
 from views.transaksi_view import TransaksiView
+from views.laporan_view import LaporanView
 
 
 class Ui_MainWindow(object):
@@ -56,18 +57,21 @@ class Ui_MainWindow(object):
         # Tambahkan teks untuk tombol-tombol yang awalnya kosong
         self.btnDashboard = QtWidgets.QPushButton("Dashboard")
         self.btnTransaksi = QtWidgets.QPushButton("Transaksi")
+        self.btnLaporan = QtWidgets.QPushButton("Laporan")
         self.btnKelolaMakanan = QtWidgets.QPushButton("Kelola Makanan")
         self.btnKelolaMakanan.setObjectName("btnKelolaMakanan")
         self.btnKelolaMakanan.setMinimumHeight(35)
 
         menuLayout.addWidget(self.btnDashboard)
         menuLayout.addWidget(self.btnTransaksi)
+        menuLayout.addWidget(self.btnLaporan)
         menuLayout.addWidget(self.btnKelolaMakanan)
         menuLayout.addStretch() # Agar tombol merapat ke kiri
 
         mainLayout.addWidget(self.menuFrame)
         self.btnKelolaMakanan.clicked.connect(self.open_makanan_crud)
         self.btnTransaksi.clicked.connect(self.openTransaksiPage)
+        self.btnLaporan.clicked.connect(self.openLaporanPage)
 
 
         # ===== FILTER SECTION =====
@@ -221,3 +225,7 @@ class Ui_MainWindow(object):
         if transaksi.exec():
             self.data = load_makanan()
             self.applyFilter()
+    
+    def openLaporanPage(self):
+        laporan = LaporanView(self)
+        laporan.exec()
