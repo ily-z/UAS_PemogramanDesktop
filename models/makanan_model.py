@@ -41,7 +41,7 @@ def get_makanan_by_id(id_makanan):
     return row
 # ...existing code...
 class MakananModel:
-    def _init_(self):
+    def __init__(self):
         self._conn = get_connection()
         self._cur = self._conn.cursor()
         # Buat tabel dengan kolom yang dipakai oleh controller/view
@@ -76,7 +76,7 @@ class MakananModel:
         self._conn.commit()
 
     def delete(self, id_):
-        self.cur.execute("DELETE FROM makanan WHERE id_makanan=?", (id,))
+        self._cur.execute("DELETE FROM makanan WHERE id_makanan=?", (id_,))
         self._conn.commit()
 
     def close(self):

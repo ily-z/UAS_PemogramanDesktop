@@ -56,14 +56,12 @@ class Ui_MainWindow(object):
         # Tambahkan teks untuk tombol-tombol yang awalnya kosong
         self.btnDashboard = QtWidgets.QPushButton("Dashboard")
         self.btnTransaksi = QtWidgets.QPushButton("Transaksi")
-        self.btnLaporan = QtWidgets.QPushButton("Laporan")
         self.btnKelolaMakanan = QtWidgets.QPushButton("Kelola Makanan")
         self.btnKelolaMakanan.setObjectName("btnKelolaMakanan")
         self.btnKelolaMakanan.setMinimumHeight(35)
 
         menuLayout.addWidget(self.btnDashboard)
         menuLayout.addWidget(self.btnTransaksi)
-        menuLayout.addWidget(self.btnLaporan)
         menuLayout.addWidget(self.btnKelolaMakanan)
         menuLayout.addStretch() # Agar tombol merapat ke kiri
 
